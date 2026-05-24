@@ -8,6 +8,7 @@ export default function Contact() {
   const [selected, setSelected] = useState<string[]>([])
   const [submitted, setSubmitted] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [formError, setFormError] = useState<string | null>(null)
 
   const toggle = (item: string) =>
     setSelected((prev) =>
@@ -17,9 +18,36 @@ export default function Contact() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setLoading(true)
-    await new Promise((r) => setTimeout(r, 800))
-    setLoading(false)
-    setSubmitted(true)
+    setFormError(null)
+
+    const form = e.currentTarget
+    const data = {
+      name: (form.elements.namedItem('name') as HTMLInputElement).value,
+      email: (form.elements.namedItem('email') as HTMLInputElement).value,
+      organization: (form.elements.namedItem('organization') as HTMLInputElement).value,
+      interests: selected,
+      message: (form.elements.namedItem('message') as HTMLTextAreaElement).value,
+    }
+
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      })
+
+      const json = await res.json()
+
+      if (!res.ok) {
+        throw new Error(json.error || 'Something went wrong. Please try again.')
+      }
+
+      setSubmitted(true)
+    } catch (err) {
+      setFormError(err instanceof Error ? err.message : 'Failed to send. Please try again.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   const inputStyle: React.CSSProperties = {
@@ -341,6 +369,25 @@ export default function Contact() {
                 }}
               />
             </div>
+
+            {/* Error banner */}
+            {formError && (
+              <div
+                role="alert"
+                style={{
+                  background: 'rgba(209,74,74,0.15)',
+                  border: '1px solid rgba(209,74,74,0.35)',
+                  borderRadius: 8,
+                  padding: '12px 16px',
+                  fontFamily: 'var(--font-body)',
+                  fontSize: 14,
+                  color: '#FCA5A5',
+                  lineHeight: 1.5,
+                }}
+              >
+                {formError}
+              </div>
+            )}
 
             {/* Submit */}
             <div style={{ paddingTop: 4 }}>
