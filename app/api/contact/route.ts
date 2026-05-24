@@ -111,23 +111,31 @@ export async function POST(req: NextRequest) {
 </html>
 `
 
+  // Build the from address safely — EMAIL_FROM_ADDRESS is just the email,
+  // no angle brackets needed in the env var
+  const fromAddress = process.env.EMAIL_FROM_ADDRESS || 'onboarding@resend.dev'
+  const from = `Thruline Design <${fromAddress}>`
+  const to = process.env.CONTACT_EMAIL || 'hello@thrulinedesign.co'
+
   try {
     const { error } = await resend.emails.send({
-      from: process.env.EMAIL_FROM || 'Thruline Design <onboarding@resend.dev>',
-      to: process.env.CONTACT_EMAIL || 'hello@thrulinedesign.co',
+      from,
+      to,
       replyTo: email,
       subject: `New inquiry from ${name}${organization ? ` · ${organization}` : ''}`,
       html,
     })
 
     if (error) {
-      console.error('[contact] Resend error:', error)
-      return NextResponse.json({ error: 'Failed to send. Please try again.' }, { status: 500 })
+      const msg = (error as { message?: string }).message || JSON.stringify(error)
+      console.error('[contact] Resend error:', msg)
+      return NextResponse.json({ error: `Email failed: ${msg}` }, { status: 500 })
     }
 
     return NextResponse.json({ success: true })
   } catch (err) {
-    console.error('[contact] Unexpected error:', err)
-    return NextResponse.json({ error: 'Unexpected error. Please try again.' }, { status: 500 })
+    const msg = err instanceof Error ? err.message : String(err)
+    console.error('[contact] Unexpected error:', msg)
+    return NextResponse.json({ error: `Unexpected error: ${msg}` }, { status: 500 })
   }
 }

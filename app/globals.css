@@ -127,7 +127,12 @@ section {
   .form-row { grid-template-columns: 1fr !important; }
 }
 
-/* ---- Form placeholders ---- */
+/* ---- Contact form fields ---- */
+/* Override browser UA styles that fight inline color on textarea */
+.contact-field {
+  color: rgba(250, 250, 247, 0.88) !important;
+  -webkit-text-fill-color: rgba(250, 250, 247, 0.88) !important;
+}
 input::placeholder,
 textarea::placeholder {
   color: rgba(250, 250, 247, 0.30);

@@ -225,6 +225,7 @@ export default function Contact() {
                   type="text"
                   required
                   placeholder="Your name"
+                  className="contact-field"
                   style={inputStyle}
                   onFocus={(e) => {
                     e.target.style.borderColor = 'var(--periwinkle)'
@@ -256,6 +257,7 @@ export default function Contact() {
                   type="email"
                   required
                   placeholder="you@organization.com"
+                  className="contact-field"
                   style={inputStyle}
                   onFocus={(e) => {
                     e.target.style.borderColor = 'var(--periwinkle)'
@@ -289,6 +291,7 @@ export default function Contact() {
                 name="organization"
                 type="text"
                 placeholder="Where you work"
+                className="contact-field"
                 style={inputStyle}
                 onFocus={(e) => {
                   e.target.style.borderColor = 'var(--periwinkle)'
@@ -364,6 +367,7 @@ export default function Contact() {
                 required
                 rows={5}
                 placeholder="Tell us about the challenge you're navigating..."
+                className="contact-field"
                 style={{ ...inputStyle, resize: 'vertical', lineHeight: 1.55 }}
                 onFocus={(e) => {
                   e.target.style.borderColor = 'var(--periwinkle)'
