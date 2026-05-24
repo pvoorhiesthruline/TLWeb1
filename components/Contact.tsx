@@ -61,7 +61,7 @@ export default function Contact() {
     padding: '13px 16px',
     fontFamily: 'var(--font-body)',
     fontSize: 15,
-    color: 'var(--ink)',
+    color: 'rgba(250,250,247,0.88)',
     background: 'rgba(250,250,247,0.08)',
     border: '1px solid rgba(255,255,255,0.16)',
     borderRadius: 8,
