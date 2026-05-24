@@ -36,16 +36,18 @@ export default function Contact() {
         body: JSON.stringify(data),
       })
 
-      // Safely parse JSON — guard against empty or non-JSON responses
+      // Read raw text first so we never lose the body
+      const rawText = await res.text()
       let json: { error?: string; success?: boolean } = {}
       try {
-        json = await res.json()
+        json = JSON.parse(rawText)
       } catch {
-        // response had no body
+        // response wasn't JSON — show the raw body (truncated) so we can debug
       }
 
       if (!res.ok) {
-        throw new Error(json.error || 'Something went wrong. Please try again.')
+        const msg = json.error || `Server error ${res.status}: ${rawText.slice(0, 200)}`
+        throw new Error(msg)
       }
 
       setSubmitted(true)
