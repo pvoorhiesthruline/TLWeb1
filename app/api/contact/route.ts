@@ -4,14 +4,22 @@ import { NextRequest, NextResponse } from 'next/server'
 export async function POST(req: NextRequest) {
   // Instantiate lazily so build succeeds without RESEND_API_KEY in CI
   const resend = new Resend(process.env.RESEND_API_KEY)
-  const body = await req.json()
-  const { name, email, organization, interests, message } = body as {
-    name: string
-    email: string
+
+  // Parse body — return JSON error if malformed so client never sees empty response
+  let body: {
+    name?: string
+    email?: string
     organization?: string
     interests?: string[]
-    message: string
+    message?: string
   }
+  try {
+    body = await req.json()
+  } catch {
+    return NextResponse.json({ error: 'Invalid request.' }, { status: 400 })
+  }
+
+  const { name, email, organization, interests, message } = body
 
   if (!name?.trim() || !email?.trim() || !message?.trim()) {
     return NextResponse.json({ error: 'Name, email, and message are required.' }, { status: 400 })

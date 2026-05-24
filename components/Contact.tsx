@@ -36,7 +36,13 @@ export default function Contact() {
         body: JSON.stringify(data),
       })
 
-      const json = await res.json()
+      // Safely parse JSON — guard against empty or non-JSON responses
+      let json: { error?: string; success?: boolean } = {}
+      try {
+        json = await res.json()
+      } catch {
+        // response had no body
+      }
 
       if (!res.ok) {
         throw new Error(json.error || 'Something went wrong. Please try again.')
