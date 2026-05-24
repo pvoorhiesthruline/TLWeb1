@@ -2,35 +2,40 @@ import { Resend } from 'resend'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(req: NextRequest) {
-  // Instantiate lazily so build succeeds without RESEND_API_KEY in CI
-  const resend = new Resend(process.env.RESEND_API_KEY)
-
-  // Parse body — return JSON error if malformed so client never sees empty response
-  let body: {
-    name?: string
-    email?: string
-    organization?: string
-    interests?: string[]
-    message?: string
-  }
+  // Top-level try/catch — guarantees we always return JSON, never a bare 500
   try {
-    body = await req.json()
-  } catch {
-    return NextResponse.json({ error: 'Invalid request.' }, { status: 400 })
-  }
+    if (!process.env.RESEND_API_KEY) {
+      return NextResponse.json({ error: 'Server misconfiguration: missing API key.' }, { status: 500 })
+    }
 
-  const { name, email, organization, interests, message } = body
+    const resend = new Resend(process.env.RESEND_API_KEY)
 
-  if (!name?.trim() || !email?.trim() || !message?.trim()) {
-    return NextResponse.json({ error: 'Name, email, and message are required.' }, { status: 400 })
-  }
+    // Parse body
+    let body: {
+      name?: string
+      email?: string
+      organization?: string
+      interests?: string[]
+      message?: string
+    }
+    try {
+      body = await req.json()
+    } catch {
+      return NextResponse.json({ error: 'Invalid request body.' }, { status: 400 })
+    }
 
-  const interestsList =
-    interests && interests.length > 0
-      ? interests.map((i) => `<li>${i}</li>`).join('')
-      : '<li>—</li>'
+    const { name, email, organization, interests, message } = body
 
-  const html = `
+    if (!name?.trim() || !email?.trim() || !message?.trim()) {
+      return NextResponse.json({ error: 'Name, email, and message are required.' }, { status: 400 })
+    }
+
+    const interestsList =
+      interests && interests.length > 0
+        ? interests.map((i) => `<li>${i}</li>`).join('')
+        : '<li>—</li>'
+
+    const html = `
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -111,13 +116,10 @@ export async function POST(req: NextRequest) {
 </html>
 `
 
-  // Build the from address safely — EMAIL_FROM_ADDRESS is just the email,
-  // no angle brackets needed in the env var
-  const fromAddress = process.env.EMAIL_FROM_ADDRESS || 'onboarding@resend.dev'
-  const from = `Thruline Design <${fromAddress}>`
-  const to = process.env.CONTACT_EMAIL || 'hello@thrulinedesign.co'
+    const fromAddress = process.env.EMAIL_FROM_ADDRESS || 'onboarding@resend.dev'
+    const from = `Thruline Design <${fromAddress}>`
+    const to = process.env.CONTACT_EMAIL || 'hello@thrulinedesign.co'
 
-  try {
     const { error } = await resend.emails.send({
       from,
       to,
@@ -133,9 +135,10 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ success: true })
+
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err)
-    console.error('[contact] Unexpected error:', msg)
-    return NextResponse.json({ error: `Unexpected error: ${msg}` }, { status: 500 })
+    console.error('[contact] Top-level crash:', msg)
+    return NextResponse.json({ error: `Server error: ${msg}` }, { status: 500 })
   }
 }
